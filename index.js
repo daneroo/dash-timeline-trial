@@ -17,6 +17,10 @@ const segmentTimelineURL = sources[0]
 
 main()
 
+const factor = 1000
+const newEpoch = '2018-11-23T00:00:00Z'
+// const newEpoch = '1970-01-01T00:00:00Z'
+
 async function main () {
   const resp = await axios.get(segmentTimelineURL)
   const { data } = resp
@@ -35,8 +39,8 @@ async function main () {
   fs.writeFileSync('manifest.json', JSON.stringify(jsonObj, null, 2))
 
   showJSON(jsonObj)
-  shiftInPlace(jsonObj)
-  scaleInPlace(jsonObj)
+  shiftInPlace(jsonObj, newEpoch)
+  scaleInPlace(jsonObj, factor)
   showJSON(jsonObj)
 
   //  Back to xml

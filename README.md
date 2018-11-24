@@ -3,16 +3,16 @@
 ## Notes
 
 ```bash
-MPD: 
-    <AdaptationSet contentType="video" maxFrameRate="60/2" maxHeight="360" maxWidth="640" mimeType="video/mp4" minHeight="360" minWidth="640" par="16:9" segmentAlignment="true" startWithSAP="1">
-      <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"></Role>
-      <SegmentTemplate initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/t$Time$.m4s" timescale="90000">
-        <SegmentTimeline>
-          <S d="180000" r="150" t="138866317200000"></S>
-        </SegmentTimeline>
-      </SegmentTemplate>
-      <Representation bandwidth="300000" codecs="avc1.64001e" frameRate="60/2" height="360" id="V300" sar="1:1" width="640"></Representation>
-    </AdaptationSet>
+MPD:
+  <AdaptationSet contentType="video" maxFrameRate="60/2" maxHeight="360" maxWidth="640" mimeType="video/mp4" minHeight="360" minWidth="640" par="16:9" segmentAlignment="true" startWithSAP="1">
+    <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"></Role>
+    <SegmentTemplate initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/t$Time$.m4s" timescale="90000">
+      <SegmentTimeline>
+        <S d="180000" r="150" t="138866317200000"></S>
+      </SegmentTimeline>
+    </SegmentTemplate>
+    <Representation bandwidth="300000" codecs="avc1.64001e" frameRate="60/2" height="360" id="V300" sar="1:1" width="640"></Representation>
+  </AdaptationSet>
 
 Init: http://localhost:8000/livesim-dev/segtimeline_1/testpic_2s/V300/init.mp4
 1- http://localhost:8000/livesim-dev/segtimeline_1/testpic_2s/V300/t138866343120000.m4s

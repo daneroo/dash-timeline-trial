@@ -13,9 +13,9 @@ module.exports = {
 }
 
 const factor = 1000
-const ago = 24 * 60 * 60 * 1000 // milliseconds ago
-const newEpoch = new Date(+new Date() - ago).toISOString().substring(0, 19) + 'Z'
-// const newEpoch = '2018-11-23T00:00:00Z'
+// const ago = 24 * 60 * 60 * 1000 // milliseconds ago
+// const newEpoch = new Date(+new Date() - ago).toISOString().substring(0, 19) + 'Z'
+const newEpoch = '2018-11-23T00:00:00Z'
 // const newEpoch = '1970-01-01T00:00:00Z'
 
 if (require.main === module) {
@@ -39,12 +39,6 @@ function start () {
     res.send(xml)
   })
   const proxy = makeProxy()
-  // Can be scaled here, or in proxy.on('proxyReq')
-  // proxy.on('proxyReq', function (proxyReq, req, res, options) {
-  //   // proxyReq.setHeader('X-Special-Proxy-Header', 'foobar')
-  //   // console.log('-proxyReq.path', proxyReq.path)
-  //   proxyReq.path = rewriteSegment(proxyReq.path, factor)
-  // })
 
   // Examine (passive) response from target
   proxy.on('proxyRes', function (proxyRes, req, res) {
@@ -71,8 +65,8 @@ function bindHandler (proxy) {
     if (counter % reportEveryN === 0) {
       // console.log(`${new Date().toISOString()} proxy: ${req.url} count: ${counter}`)
     }
-    // Can be scaled here, or in proxy.on('proxyReq')
-    req.url = rewriteSegment(req.url, factor, newEpoch)
+    // Can be scaled here, or in proxy.on('proxyReq'), by setting proxyReq.path
+    req.url = rewriteSegment(req.url)
     proxy.web(req, res, { target: TARGET })
     counter++
   }
