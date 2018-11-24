@@ -1,6 +1,10 @@
 
 const parser = require('fast-xml-parser')
 
+// TODO: remove in-place oprations
+// const deepCopy = require('deep-copy')
+// const copy = deepCopy({ a: { b: [{ c: 5 }] } })
+
 module.exports = {
   rewriteSegment,
   transformXML,
@@ -11,10 +15,6 @@ module.exports = {
   toXML,
   toJSON
 }
-
-// Should be derived from SegmentTemplate@media
-// /livesim-dev/segtimeline_1/testpic_2s/A48/t74061814368256.m4s
-const regex = /^(.*)\/(.*)\/t(\d+)\.m4s$/
 
 const stateStore = {
   // repId : {timescale, delta, factor}
@@ -47,19 +47,18 @@ function bitsGained (tOrig, tScaled) {
   // return (Math.log(tOrig) / Math.log(2) - Math.log(tScaled) / Math.log(2)).toFixed(1)
 }
 
-function rewriteSegment (url) { // , factor = 1, newEpoch = '1970-01-01T00:00:00Z'
-  // /livesim-dev/segtimeline_1/testpic_2s/A48/t74061814368256.m4s
+// Should be derived from SegmentTemplate@media
+// /livesim-dev/segtimeline_1/testpic_2s/A48/t74061814368256.m4s
+const regex = /^(.*)\/(.*)\/t(\d+)\.m4s$/
+function rewriteSegment (url) {
   const match = regex.exec(url)
   if (match && match.length === 4) {
     const base = match[1]
     const repId = match[2]
     const time = Number(match[3])
 
-    // should get these from stateStore
-    // const oldEpoch = '1970-01-01T00:00:00Z'
-    // const delta = deltaFromEpochs(oldEpoch, newEpoch)
     const { delta, timescale, factor } = getState(repId) || {} // to allow destructuring
-    if (!(delta && timescale && factor)) {
+    if (!(delta >= 0 && timescale >= 0 && factor >= 0)) {
       console.log(`${new Date().toISOString()} error: cannot decode`, { url, delta, timescale, factor })
       return url
     }
@@ -89,7 +88,7 @@ function transformXML (mpd, factor = 1, newEpoch = '1970-01-01T00:00:00Z') {
   // transform BaseURL
   const xmlRebased = xml.replace('<BaseURL>http://vm2.dashif.org/', '<BaseURL>http://localhost:8000/')
 
-  console.log(`${new Date().toISOString()} transformed  elapsed:${+new Date() - start}ms`)
+  console.log(`${new Date().toISOString()} transformedXML  elapsed:${+new Date() - start}ms`)
   return xmlRebased
 }
 
