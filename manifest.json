@@ -6,7 +6,7 @@
       "minBufferTime": "PT2S",
       "minimumUpdatePeriod": "PT0S",
       "profiles": "urn:mpeg:dash:profile:isoff-live:2011,http://dashif.org/guidelines/dash-if-simple",
-      "publishTime": "2018-11-23T07:05:47Z",
+      "publishTime": "2018-11-24T01:40:02Z",
       "timeShiftBufferDepth": "PT5M",
       "type": "dynamic",
       "ns1:schemaLocation": "urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd",
@@ -47,14 +47,8 @@
               "S": [
                 {
                   "@": {
-                    "d": 95232,
-                    "t": 74061909408768
-                  }
-                },
-                {
-                  "@": {
                     "d": 96256,
-                    "r": 2
+                    "t": 74065118400512
                   }
                 },
                 {
@@ -460,7 +454,13 @@
                 },
                 {
                   "@": {
-                    "d": 96256
+                    "d": 96256,
+                    "r": 2
+                  }
+                },
+                {
+                  "@": {
+                    "d": 95232
                   }
                 }
               ]
@@ -510,8 +510,8 @@
               "S": {
                 "@": {
                   "d": 180000,
-                  "r": 149,
-                  "t": 138866080140000
+                  "r": 150,
+                  "t": 138872097000000
                 }
               }
             }
