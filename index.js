@@ -1,7 +1,7 @@
 
 const fs = require('fs')
-const axios = require('axios')
-const parser = require('fast-xml-parser')
+const path = require('path')
+const { fetchXml } = require('./io')
 const { showJSON, shiftInPlace, scaleInPlace, toXML, toJSON } = require('./manifest')
 
 const sources = [
@@ -22,31 +22,31 @@ const newEpoch = '2018-11-23T00:00:00Z'
 // const newEpoch = '1970-01-01T00:00:00Z'
 
 async function main () {
-  const resp = await axios.get(segmentTimelineURL)
-  const { data } = resp
-  // check for status
-  const xmlData = data
-  // console.log(xmlData)
-  fs.writeFileSync('manifest.mpd', xmlData)
+  try {
+    const xmlData = await fetchXml(segmentTimelineURL)
+    writeFile('manifest.mpd', xmlData)
 
-  // to  JSON
-  const xmlOK = parser.validate(xmlData)
-  if (xmlOK !== true) { // optional (it'll return an object in case it's not valid)
-    console.log('failed to parse xml')
+    const jsonObj = toJSON(xmlData)
+    writeFile('manifest.json', JSON.stringify(jsonObj, null, 2))
+
+    showJSON(jsonObj)
+    shiftInPlace(jsonObj, newEpoch)
+    scaleInPlace(jsonObj, factor)
+    showJSON(jsonObj)
+
+    //  Back to xml
+    const xml = toXML(jsonObj)
+    // console.log(xml)
+    writeFile('manifest-back.mpd', xml)
+
+    console.log('Done converting')
+  } catch (err) {
+    console.error(err)
     process.exit(1)
   }
-  const jsonObj = toJSON(xmlData)
-  fs.writeFileSync('manifest.json', JSON.stringify(jsonObj, null, 2))
+}
 
-  showJSON(jsonObj)
-  shiftInPlace(jsonObj, newEpoch)
-  scaleInPlace(jsonObj, factor)
-  showJSON(jsonObj)
-
-  //  Back to xml
-  const xml = toXML(jsonObj)
-  // console.log(xml)
-  fs.writeFileSync('manifest-back.mpd', xml)
-
-  console.log('Done converting')
+function writeFile (fileName, data) {
+  const dataDirectory = './data'
+  fs.writeFileSync(path.join(dataDirectory, fileName), data)
 }
