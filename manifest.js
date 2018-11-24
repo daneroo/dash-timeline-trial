@@ -16,22 +16,41 @@ module.exports = {
 // /livesim-dev/segtimeline_1/testpic_2s/A48/t74061814368256.m4s
 const regex = /^(.*)\/(.*)\/t(\d+)\.m4s$/
 
-function rewriteSegment (url, factor = 1) {
+const stateStore = {
+  // repId : {timescale, delta, factor}
+}
+
+// bits needed for t0 - bits needed for t1
+function bitsGained (tOrig, tScaled) {
+  return (Math.log(tOrig / tScaled) / Math.log(2)).toFixed(1)
+  // return (Math.log(tOrig) / Math.log(2) - Math.log(tScaled) / Math.log(2)).toFixed(1)
+}
+
+function rewriteSegment (url, factor = 1, newEpoch = '1970-01-01T00:00:00Z') {
   // /livesim-dev/segtimeline_1/testpic_2s/A48/t74061814368256.m4s
   const match = regex.exec(url)
   if (match && match.length === 4) {
     const base = match[1]
     const repId = match[2]
     const time = Number(match[3])
+
+    // should get these from stateStore
+    const oldEpoch = '1970-01-01T00:00:00Z'
+    const delta = deltaFromEpochs(oldEpoch, newEpoch)
+
+    const timescale = (repId === 'V300') ? 90000 : 48000
+
+    // inverse order as in transform shift,scale -> inverse scale,shift
+    const time1 = (time * factor) + delta * timescale
+    console.log(`${new Date().toISOString()} rewrite +${bitsGained(time1, time)}bits (${repId}) ${time} -> ${time1} delta:${delta}s ${base}`)
     if (repId === 'V300') {
-      console.log(`${new Date().toISOString()} rewrite (${repId}) ${time} -> ${time * factor}`)
     }
-    return `${base}/${repId}/t${time * factor}.m4s`
+    return `${base}/${repId}/t${time1}.m4s`
   }
   return url
 }
 
-async function transform (url, factor = 1) {
+async function transform (url, factor = 1, newEpoch = '1970-01-01T00:00:00Z') {
   // console.log(`${new Date().toISOString()} transforming: ${url}`)
   const start = +new Date()
   const resp = await axios.get(url)
@@ -49,7 +68,7 @@ async function transform (url, factor = 1) {
   const jsonObj = toJSON(xmlData)
 
   // showJSON(jsonObj)
-  // shiftInPlace(jsonObj)
+  shiftInPlace(jsonObj, newEpoch)
   scaleInPlace(jsonObj, factor)
   // showJSON(jsonObj)
 
@@ -85,29 +104,37 @@ function showJSON (mpd) {
   })
 }
 
+// roundingMethod used for shifInPlace and scaleInPlace
+const roundingMethod = Math.round // Math.floor
+
+// this should be deduced from the manifest itself...
+// oldEpoch, newEpoch are isoFormated strings: e.g. 1970-01-01T00:00:00Z
+function deltaFromEpochs (oldEpoch, newEpoch) {
+  const oldEpochMillis = +new Date(oldEpoch)
+  const newEpochMillis = +new Date(newEpoch)
+  const delta = roundingMethod((newEpochMillis - oldEpochMillis) / 1000)
+  return delta
+}
+// TODO: Make sure t translation never goes negative
 function shiftInPlace (mpd, newEpoch = '1970-01-01T00:00:00Z') {
   const oldEpoch = mpd.MPD['@'].availabilityStartTime
   mpd.MPD['@'].availabilityStartTime = newEpoch
-  const oldEpochMillis = +new Date(oldEpoch)
-  const newEpochMillis = +new Date(newEpoch)
-  const deltaMillis = newEpochMillis - oldEpochMillis
+  const delta = deltaFromEpochs(oldEpoch, newEpoch)
 
   mpd.MPD.Period.AdaptationSet.forEach((as, i) => {
     const timescale = as.SegmentTemplate['@'].timescale
     const S = as.SegmentTemplate.SegmentTimeline.S
     const S0 = S.length ? S[0] : S
     const t0 = S0['@'].t
-    const stamp0 = new Date(oldEpochMillis + t0 / timescale * 1000).toISOString()
-    const t1 = t0 - (deltaMillis / 1000 * timescale)
-    const stamp1 = new Date(newEpochMillis + t1 / timescale * 1000).toISOString()
-    console.log(`${new Date().toISOString()} shift: as[${i}] ${JSON.stringify({ deltaMillis, stamp0, stamp1 })}`)
+    // const stamp0 = new Date(oldEpochMillis + t0 / timescale * 1000).toISOString()
+    const t1 = t0 - (delta * timescale)
+    // const stamp1 = new Date(newEpochMillis + t1 / timescale * 1000).toISOString()
+    console.log(`${new Date().toISOString()} shift: as[${i}].t ${t0} -> ${t1} delta: ${delta}`)
     S0['@'].t = t1
   })
 
   return mpd
 }
-
-const roundingMethod = Math.round // Math.floor
 
 function scaleInPlace (mpd, factor = 1) {
   mpd.MPD.Period.AdaptationSet.forEach(as => {

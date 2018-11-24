@@ -12,6 +12,12 @@ module.exports = {
   start
 }
 
+const factor = 1000
+const ago = 24 * 60 * 60 * 1000 // milliseconds ago
+const newEpoch = new Date(+new Date() - ago).toISOString().substring(0, 19) + 'Z'
+// const newEpoch = '2018-11-23T00:00:00Z'
+// const newEpoch = '1970-01-01T00:00:00Z'
+
 if (require.main === module) {
   start() // node.express
 }
@@ -22,15 +28,13 @@ function makeProxy () {
   return httpProxy.createProxyServer({ agent: keepAliveAgent })
 }
 
-const factor = 1000
-
 function start () {
   const app = express()
   app.use(cors())
   // app.use(logger.requestLogger)
 
   app.get(/.*\.mpd$/, async function (req, res, next) {
-    const xml = await transform(`${TARGET}${req.url}`, factor)
+    const xml = await transform(`${TARGET}${req.url}`, factor, newEpoch)
     res.set('Content-Type', 'application/dash+xml')
     res.send(xml)
   })
@@ -45,10 +49,14 @@ function start () {
   // Examine (passive) response from target
   proxy.on('proxyRes', function (proxyRes, req, res) {
     // console.log('Response headers from the target', JSON.stringify(proxyRes.headers, true, 2))
-    const { statusCode, statusMessage, url } = proxyRes
+    const { statusCode } = proxyRes
+    const { url } = req
     if (statusCode !== 200) {
       // console.log('Response keys from the target', Object.keys(proxyRes))
-      console.log('Response status!=200 from the target', { statusCode, statusMessage, url })
+      console.error('Response status!=200 from the target', { statusCode, url })
+    } else if (url.includes('V300') && !url.includes('V300/init.mp4')) {
+      // const last2 = url.split('/').slice(-2).join('/')
+      // console.log('Response status OK from the target', { url: last2 })
     }
   })
 
@@ -64,7 +72,7 @@ function bindHandler (proxy) {
       // console.log(`${new Date().toISOString()} proxy: ${req.url} count: ${counter}`)
     }
     // Can be scaled here, or in proxy.on('proxyReq')
-    req.url = rewriteSegment(req.url, factor)
+    req.url = rewriteSegment(req.url, factor, newEpoch)
     proxy.web(req, res, { target: TARGET })
     counter++
   }
