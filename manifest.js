@@ -1,9 +1,9 @@
 
-const axios = require('axios')
 const parser = require('fast-xml-parser')
 
 module.exports = {
   rewriteSegment,
+  transformXML,
   transform,
   showJSON,
   shiftInPlace,
@@ -74,37 +74,33 @@ function rewriteSegment (url) { // , factor = 1, newEpoch = '1970-01-01T00:00:00
   return url
 }
 
-async function transform (url, factor = 1, newEpoch = '1970-01-01T00:00:00Z') {
-  // console.log(`${new Date().toISOString()} transforming: ${url}`)
+function transformXML (mpd, factor = 1, newEpoch = '1970-01-01T00:00:00Z') {
   const start = +new Date()
-  const resp = await axios.get(url)
-  console.log(`${new Date().toISOString()} fetched: ${url} elapsed:${+new Date() - start}ms`)
 
-  const { data } = resp // {status, statusText, headers, config}
+  const jsonObj = toJSON(mpd)
 
-  // TODO check for status: !data || try/catch ?
-  const xmlData = data
-
-  // to  JSON
-  const xmlOK = parser.validate(xmlData)
-  if (xmlOK !== true) { // optional (it'll return an object in case it's not valid)
-    console.error(xmlOK)
-    console.log('failed to parse xml, returning as is')
-    return xmlData
-  }
-  const jsonObj = toJSON(xmlData)
-
-  shiftInPlace(jsonObj, newEpoch)
-  scaleInPlace(jsonObj, factor)
+  // inplace
+  transform(jsonObj, factor, newEpoch)
 
   //  Back to xml
   const xml = toXML(jsonObj)
 
+  // Move this to JSON
   // transform BaseURL
   const xmlRebased = xml.replace('<BaseURL>http://vm2.dashif.org/', '<BaseURL>http://localhost:8000/')
 
-  console.log(`${new Date().toISOString()} transformed: ${url} elapsed:${+new Date() - start}ms`)
+  console.log(`${new Date().toISOString()} transformed  elapsed:${+new Date() - start}ms`)
   return xmlRebased
+}
+
+function transform (jsonObj, factor = 1, newEpoch = '1970-01-01T00:00:00Z') {
+  const start = +new Date()
+
+  shiftInPlace(jsonObj, newEpoch)
+  scaleInPlace(jsonObj, factor)
+
+  console.log(`${new Date().toISOString()} transformed  elapsed:${+new Date() - start}ms`)
+  return jsonObj
 }
 
 function showJSON (mpd) {

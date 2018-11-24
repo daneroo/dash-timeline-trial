@@ -2,7 +2,8 @@ const http = require('http')
 const httpProxy = require('http-proxy')
 const express = require('express')
 var cors = require('cors')
-const { transform, rewriteSegment } = require('./manifest')
+const { fetchXml } = require('./io')
+const { transformXML, rewriteSegment } = require('./manifest')
 
 const PORT = Number(process.env.PORT) || 8000
 const TARGET = process.env.TARGET || 'http://vm2.dashif.org'
@@ -34,10 +35,18 @@ function start () {
   // app.use(logger.requestLogger)
 
   app.get(/.*\.mpd$/, async function (req, res, next) {
-    const xml = await transform(`${TARGET}${req.url}`, factor, newEpoch)
-    res.set('Content-Type', 'application/dash+xml')
-    res.send(xml)
+    try {
+      const mpdIn = await fetchXml(`${TARGET}${req.url}`)
+      const mpdOut = transformXML(mpdIn, factor, newEpoch)
+      res.set('Content-Type', 'application/dash+xml')
+      res.send(mpdOut)
+    } catch (error) {
+      console.error(error)
+      // don't leak the $TARGET in error message to client
+      res.status(500).send(`Unable to fetch manifest: ${req.url}`)
+    }
   })
+
   const proxy = makeProxy()
 
   // Examine (passive) response from target
