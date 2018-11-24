@@ -7,7 +7,6 @@ const { transformXML, rewriteSegment } = require('./manifest')
 
 const PORT = Number(process.env.PORT) || 8000
 const TARGET = process.env.TARGET || 'http://vm2.dashif.org'
-// was 'http://127.0.0.1:9003'
 
 module.exports = {
   start

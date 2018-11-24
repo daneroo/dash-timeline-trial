@@ -1,10 +1,13 @@
 {
-  "name": "timetrial",
+  "name": "dash-timeline-trial",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/index",
+    "lint": "standard",
+    "test": "jest src",
+    "coverage": "jest --collectCoverageFrom=src/**.js --coverage src"
   },
   "author": "",
   "license": "ISC",
@@ -17,6 +20,12 @@
     "http-proxy": "^1.17.0"
   },
   "devDependencies": {
+    "jest": "^23.6.0",
     "standard": "^12.0.1"
+  },
+  "standard": {
+    "env": {
+      "jest": true
+    }
   }
 }

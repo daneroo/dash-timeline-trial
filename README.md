@@ -1,42 +1,26 @@
 # Timeline-to-timeline experiments
 
-## Notes
+## TODO
 
-```bash
-MPD:
-  <AdaptationSet contentType="video" maxFrameRate="60/2" maxHeight="360" maxWidth="640" mimeType="video/mp4" minHeight="360" minWidth="640" par="16:9" segmentAlignment="true" startWithSAP="1">
-    <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"></Role>
-    <SegmentTemplate initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/t$Time$.m4s" timescale="90000">
-      <SegmentTimeline>
-        <S d="180000" r="150" t="138866317200000"></S>
-      </SegmentTimeline>
-    </SegmentTemplate>
-    <Representation bandwidth="300000" codecs="avc1.64001e" frameRate="60/2" height="360" id="V300" sar="1:1" width="640"></Representation>
-  </AdaptationSet>
-
-Init: http://localhost:8000/livesim-dev/segtimeline_1/testpic_2s/V300/init.mp4
-1- http://localhost:8000/livesim-dev/segtimeline_1/testpic_2s/V300/t138866343120000.m4s
-2- http://localhost:8000/livesim-dev/segtimeline_1/testpic_2s/V300/t138866343300000.m4s
-3- http://localhost:8000/livesim-dev/segtimeline_1/testpic_2s/V300/t138866343480000.m4s
-
-Observed deltas: 25920000, 25920000, 26100000, 26100000, 25920000
-
-26100000-25920000 = 180000 = <S d/> = 2*timescale
-```
+- Replace logging, and turn off in tests
 
 ## Operating
 
 ```bash
-while true; do time node index.js ; sleep 1; done
+npm start
 
-http-server --cors
+npm test
+npm test -- --watch
 
-curl http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_2s/Manifest.mpd
-curl http://localhost:8080/manifest.mpd
-curl http://localhost:8080/manifest-back.mpd
+npm run coverage
+npm run coverage -- --watch
 
-# with one of the above
+
+# Open this reference client
 open http://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html
+# and use one of these:
+curl http://vm2.dashif.org/livesim-dev/segtimeline_1/testpic_2s/Manifest.mpd
+curl http://localhost:8000/livesim-dev/segtimeline_1/testpic_2s/Manifest.mpd
 ```
 
 ## Parsing/Serializing XML

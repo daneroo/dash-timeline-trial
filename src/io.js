@@ -13,9 +13,10 @@ async function fetchXml (url) {
   // check for status and throw?
   const xmlData = data
 
-  // to  JSON
+  // validate XML
   const xmlOK = parser.validate(xmlData)
   if (xmlOK !== true) { // optional (it'll return an object in case it's not valid)
+    console.error(xmlOK)
     throw new Error(`failed to parse xml: ${url}`)
   }
   console.log(`${new Date().toISOString()} fetched: ${url} elapsed:${+new Date() - start}ms`)
