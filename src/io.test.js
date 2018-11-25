@@ -6,7 +6,7 @@ const gistBase = 'https://gist.githubusercontent.com/daneroo/a76a9e89432bb62da68
 test('Can Fetch a valid xml document', async () => {
   const gist = `${gistBase}/valid.xml`
   // const xml =
-  expect(await fetchXml(gist)).toEqual(`<?xml version=\"1.0\" encoding=\"utf-8\"?>
+  expect(await fetchXml(gist)).toEqual(`<?xml version="1.0" encoding="utf-8"?>
 <MPD> 
   <ProgramInformation>
       <Title>This Document is valid XML</Title>

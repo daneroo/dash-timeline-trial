@@ -10,6 +10,7 @@
 npm start
 
 npm test
+npm test -- --verbose
 npm test -- --watch
 
 npm run coverage
