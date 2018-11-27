@@ -1,7 +1,9 @@
 const http = require('http')
 const httpProxy = require('http-proxy')
 const express = require('express')
-var cors = require('cors')
+const cors = require('cors')
+
+const { log } = require('./lib')
 const { fetchXml } = require('./io')
 const { transformXML, rewriteSegment } = require('./manifest')
 
@@ -40,7 +42,7 @@ function start () {
       res.set('Content-Type', 'application/dash+xml')
       res.send(mpdOut)
     } catch (error) {
-      console.error(error)
+      log.error('GET manifest', error)
       // don't leak the $TARGET in error message to client
       res.status(500).send(`Unable to fetch manifest: ${req.url}`)
     }
@@ -50,15 +52,15 @@ function start () {
 
   // Examine (passive) response from target
   proxy.on('proxyRes', function (proxyRes, req, res) {
-    // console.log('Response headers from the target', JSON.stringify(proxyRes.headers, true, 2))
+    // log.debug('Response headers from the target', JSON.stringify(proxyRes.headers, true, 2))
     const { statusCode } = proxyRes
     const { url } = req
     if (statusCode !== 200) {
-      // console.log('Response keys from the target', Object.keys(proxyRes))
-      console.error('Response status!=200 from the target', { statusCode, url })
+      // log.debug('Response keys from the target', Object.keys(proxyRes))
+      log.error('Response status!=200 from the target', { statusCode, url })
     } else if (url.includes('V300') && !url.includes('V300/init.mp4')) {
       // const last2 = url.split('/').slice(-2).join('/')
-      // console.log('Response status OK from the target', { url: last2 })
+      // log.debug('Response status OK from the target', { url: last2 })
     }
   })
 
@@ -71,7 +73,7 @@ function bindHandler (proxy) {
   let counter = 0
   return function (req, res) {
     if (counter % reportEveryN === 0) {
-      // console.log(`${new Date().toISOString()} proxy: ${req.url} count: ${counter}`)
+      // log.info(`${new Date().toISOString()} proxy: ${req.url} count: ${counter}`)
     }
     // Can be scaled here, or in proxy.on('proxyReq'), by setting proxyReq.path
     req.url = rewriteSegment(req.url)

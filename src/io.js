@@ -1,5 +1,6 @@
 const axios = require('axios')
 const parser = require('fast-xml-parser')
+const { log } = require('./lib')
 
 module.exports = {
   fetchXml
@@ -16,9 +17,9 @@ async function fetchXml (url) {
   // validate XML
   const xmlOK = parser.validate(xmlData)
   if (xmlOK !== true) { // optional (it'll return an object in case it's not valid)
-    console.error(xmlOK)
+    log.error('fetchXML', xmlOK)
     throw new Error(`failed to parse xml: ${url}`)
   }
-  console.log(`${new Date().toISOString()} fetched: ${url} elapsed:${+new Date() - start}ms`)
+  log.info('fetched', { url, elapsed: +new Date() - start })
   return data
 }

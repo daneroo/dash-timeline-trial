@@ -1,5 +1,6 @@
 
 const parser = require('fast-xml-parser')
+const { log } = require('./lib')
 
 // TODO: remove in-place oprations
 // const deepCopy = require('deep-copy')
@@ -54,7 +55,7 @@ function toJSON (xmlData) {
 
   const xmlOK = parser.validate(xmlData, options)
   if (xmlOK !== true) { // optional (it'll return an object in case it's not valid)
-    console.error(xmlOK)
+    log.error('toJSON', xmlOK)
     throw new Error('failed to validate xml')
   }
   const jsonObj = parser.parse(xmlData, options)

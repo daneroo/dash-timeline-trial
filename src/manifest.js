@@ -1,4 +1,5 @@
 
+const { log } = require('./lib')
 const { toXML, toJSON } = require('./format')
 const { shiftInPlace, scaleInPlace } = require('./mpd')
 // TODO: remove in-place oprations
@@ -33,7 +34,7 @@ function storeState (dict) {
   const state = JSON.stringify(stateStore)
   const elapesdSinceShown = +new Date() - lastShown
   if (state !== prevState || elapesdSinceShown > 5000) {
-    console.log(`${new Date().toISOString()} stateStore: ${state}`)
+    log.debug('stateStore:', state)
     lastShown = +new Date()
   }
 }
@@ -59,14 +60,15 @@ function rewriteSegment (url) {
 
     const { delta, timescale, factor } = getState(repId) || {} // to allow destructuring
     if (!(delta >= 0 && timescale >= 0 && factor >= 0)) {
-      console.log(`${new Date().toISOString()} error: cannot decode`, { url, delta, timescale, factor })
+      log.error(`${new Date().toISOString()} error: cannot decode`, { url, delta, timescale, factor })
       return url
     }
 
     // inverse order as in transform shift,scale -> inverse scale,shift
     const time1 = (time * factor) + delta * timescale
-    console.log(`${new Date().toISOString()} rewrite +${bitsGained(time1, time)}bits (${repId}) ${time} -> ${time1} delta:${delta}s`)
     if (repId === 'V300') {
+      log.info(`rewrite ${time} -> ${time1}`, { bits: bitsGained(time1, time), repId, factor, delta })
+      // log.info(`rewrite +${bitsGained(time1, time)}bits (${repId}) ${time} -> ${time1} delta:${delta}s`)
     }
     return `${base}/${repId}/t${time1}.m4s`
   }
@@ -88,7 +90,7 @@ function transformXML (mpd, factor = 1, newEpoch = '1970-01-01T00:00:00Z') {
   // transform BaseURL
   const xmlRebased = xml.replace('<BaseURL>http://vm2.dashif.org/', '<BaseURL>http://localhost:8000/')
 
-  console.log(`${new Date().toISOString()} transformedXML  elapsed:${+new Date() - start}ms`)
+  log.debug('transformedXML', { elapsed: +new Date() - start })
   return xmlRebased
 }
 
@@ -98,6 +100,6 @@ function transform (jsonObj, factor = 1, newEpoch = '1970-01-01T00:00:00Z') {
   shiftInPlace(jsonObj, newEpoch, storeState)
   scaleInPlace(jsonObj, factor, storeState)
 
-  console.log(`${new Date().toISOString()} transformed  elapsed:${+new Date() - start}ms`)
+  log.debug('transformed', { elapsed: +new Date() - start })
   return jsonObj
 }

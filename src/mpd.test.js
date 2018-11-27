@@ -6,161 +6,163 @@ const { toJSON } = require('./format')
 // function shiftInPlace (mpd, newEpoch = '1970-01-01T00:00:00Z', storeState = (dict) => {}) {
 // function scaleInPlace (mpd, factor = 1, storeState = (dict) => {}) {
 
-// TODO(daneroo): Add immutability test by movinf input assertion after shift invocation
-test('Can shift a timeline with default args', async () => {
-  const expectedEpoch = '1970-01-01T00:00:00Z'
-  const mpd = getTimeline()
+describe('mpd', () => {
+// TODO(daneroo): Add immutability test by moving input assertion after shift invocation
+  test('Can shift a timeline with default args', async () => {
+    const expectedEpoch = '1970-01-01T00:00:00Z'
+    const mpd = getTimeline()
 
-  // confirm input values
-  const oldEpoch = mpd.MPD['@'].availabilityStartTime
-  expect(oldEpoch).toEqual('1970-01-01T00:00:00Z')
+    // confirm input values
+    const oldEpoch = mpd.MPD['@'].availabilityStartTime
+    expect(oldEpoch).toEqual('1970-01-01T00:00:00Z')
 
-  // orig audio <S />
-  const origAudioS = expect.arrayContaining([{ '@': { 'd': 96256, 't': 74065118400512 } }])
-  expect(mpd.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(origAudioS)
+    // orig audio <S />
+    const origAudioS = expect.arrayContaining([{ '@': { 'd': 96256, 't': 74065118400512 } }])
+    expect(mpd.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(origAudioS)
 
-  // orig video <S />
-  const origVideoS = { '@': { 'd': 180000, 'r': 150, 't': 138872097000000 } }
-  expect(mpd.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(origVideoS)
+    // orig video <S />
+    const origVideoS = { '@': { 'd': 180000, 'r': 150, 't': 138872097000000 } }
+    expect(mpd.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(origVideoS)
 
-  const shifted = shiftInPlace(mpd)
+    const shifted = shiftInPlace(mpd)
 
-  expect(shifted.MPD['@'].availabilityStartTime).toEqual(expectedEpoch)
+    expect(shifted.MPD['@'].availabilityStartTime).toEqual(expectedEpoch)
 
-  // shifted audio <S />
-  expect(shifted.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(origAudioS)
+    // shifted audio <S />
+    expect(shifted.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(origAudioS)
 
-  // shifted video <S />
-  expect(shifted.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(origVideoS)
-})
-test('Can shift a timeline', async () => {
-  const newEpoch = '2018-11-23T00:00:00Z'
-  const mpd = getTimeline()
-
-  // confirm input values
-  const oldEpoch = mpd.MPD['@'].availabilityStartTime
-  expect(oldEpoch).toEqual('1970-01-01T00:00:00Z')
-
-  // orig audio <S />
-  const origAudioS = expect.arrayContaining([{ '@': { 'd': 96256, 't': 74065118400512 } }])
-  expect(mpd.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(origAudioS)
-
-  // orig video <S />
-  const origVideoS = { '@': { 'd': 180000, 'r': 150, 't': 138872097000000 } }
-  expect(mpd.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(origVideoS)
-
-  const shifted = shiftInPlace(mpd, newEpoch, (dict) => {})
-
-  expect(shifted.MPD['@'].availabilityStartTime).toEqual(newEpoch)
-
-  // shifted audio <S />
-  const shiftedAudioS = expect.arrayContaining([{ '@': { 'd': 96256, 't': 4420800512 } }])
-  expect(shifted.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(shiftedAudioS)
-
-  // shifted video <S />
-  const shiftedVideoS = { '@': { 'd': 180000, 'r': 150, 't': 8289000000 } }
-  expect(shifted.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(shiftedVideoS)
-})
-
-test('Can scale a timeline with default args', async () => {
-  const mpd = getTimeline()
-
-  // confirm input values
-  const oldEpoch = mpd.MPD['@'].availabilityStartTime
-  expect(oldEpoch).toEqual('1970-01-01T00:00:00Z')
-
-  // orig audio <S />
-  const origAudioS = expect.arrayContaining([{ '@': { 'd': 96256, 't': 74065118400512 } }])
-  expect(mpd.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(origAudioS)
-
-  // orig video <S />
-  const origVideoS = { '@': { 'd': 180000, 'r': 150, 't': 138872097000000 } }
-  expect(mpd.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(origVideoS)
-
-  const scaled = scaleInPlace(mpd)
-
-  // scaled audio <S />
-  expect(scaled.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(origAudioS)
-
-  // scaled video <S />
-  expect(scaled.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(origVideoS)
-})
-
-test('Can scale a timeline', async () => {
-  const mpd = getTimeline()
-
-  // confirm input values
-  const oldEpoch = mpd.MPD['@'].availabilityStartTime
-  expect(oldEpoch).toEqual('1970-01-01T00:00:00Z')
-
-  // orig audio <S />
-  const origAudioS = expect.arrayContaining([{ '@': { 'd': 96256, 't': 74065118400512 } }])
-  expect(mpd.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(origAudioS)
-
-  // orig video <S />
-  const origVideoS = { '@': { 'd': 180000, 'r': 150, 't': 138872097000000 } }
-  expect(mpd.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(origVideoS)
-
-  const scaled = scaleInPlace(mpd, 1000, (dict) => {})
-
-  // scaled audio <S />
-  const scaledAudioS = expect.arrayContaining([{ '@': { 'd': 96, 't': 74065118401 } }])
-  expect(scaled.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(scaledAudioS)
-
-  // scaled video <S />
-  const scaledVideoS = { '@': { 'd': 180, 'r': 150, 't': 138872097000 } }
-  expect(scaled.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
-    .toMatchObject(scaledVideoS)
-})
-
-test('Can summarize a manifest', async () => {
-  expect(summary(getMPD())).toEqual({
-    availabilityStartTime: '1970-01-01T00:00:00Z',
-    AdaptationSet: [ {
-      SegmentTemplateSegmentTimeline: {
-        contentType: 'audio',
-        stamp: '2018-11-24T01:35:00.010Z',
-        t0: 74065118400512,
-        timescale: 48000
-      }
-    }, {
-      SegmentTemplateSegmentTimeline: {
-        contentType: 'video',
-        stamp: '2018-11-24T01:35:00.000Z',
-        t0: 138872097000000,
-        timescale: 90000
-      }
-    } ]
+    // shifted video <S />
+    expect(shifted.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(origVideoS)
   })
-})
+  test('Can shift a timeline', async () => {
+    const newEpoch = '2018-11-23T00:00:00Z'
+    const mpd = getTimeline()
 
-// Cancalculate delta from epochs
-test.each([
-  ['1970-01-01T00:00:00Z', '1970-01-01T00:00:00Z', 0],
-  ['2018-11-23T00:00:00Z', '2018-11-23T00:00:00Z', 0],
-  ['2018-11-22T00:00:00Z', '2018-11-23T00:00:00Z', 86400],
-  ['1970-01-01T00:00:00Z', '2018-11-23T00:00:00Z', 1542931200],
-  ['2018-11-23T00:00:00Z', '1970-01-01T00:00:00Z', -1542931200]
-])('Calculate delta from epochs (%s, %s)',
-  (oldEpoch, newEpoch, expected) => {
-    expect(deltaFromEpochs(oldEpoch, newEpoch)).toBe(expected)
-  }
-)
+    // confirm input values
+    const oldEpoch = mpd.MPD['@'].availabilityStartTime
+    expect(oldEpoch).toEqual('1970-01-01T00:00:00Z')
+
+    // orig audio <S />
+    const origAudioS = expect.arrayContaining([{ '@': { 'd': 96256, 't': 74065118400512 } }])
+    expect(mpd.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(origAudioS)
+
+    // orig video <S />
+    const origVideoS = { '@': { 'd': 180000, 'r': 150, 't': 138872097000000 } }
+    expect(mpd.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(origVideoS)
+
+    const shifted = shiftInPlace(mpd, newEpoch, (dict) => {})
+
+    expect(shifted.MPD['@'].availabilityStartTime).toEqual(newEpoch)
+
+    // shifted audio <S />
+    const shiftedAudioS = expect.arrayContaining([{ '@': { 'd': 96256, 't': 4420800512 } }])
+    expect(shifted.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(shiftedAudioS)
+
+    // shifted video <S />
+    const shiftedVideoS = { '@': { 'd': 180000, 'r': 150, 't': 8289000000 } }
+    expect(shifted.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(shiftedVideoS)
+  })
+
+  test('Can scale a timeline with default args', async () => {
+    const mpd = getTimeline()
+
+    // confirm input values
+    const oldEpoch = mpd.MPD['@'].availabilityStartTime
+    expect(oldEpoch).toEqual('1970-01-01T00:00:00Z')
+
+    // orig audio <S />
+    const origAudioS = expect.arrayContaining([{ '@': { 'd': 96256, 't': 74065118400512 } }])
+    expect(mpd.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(origAudioS)
+
+    // orig video <S />
+    const origVideoS = { '@': { 'd': 180000, 'r': 150, 't': 138872097000000 } }
+    expect(mpd.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(origVideoS)
+
+    const scaled = scaleInPlace(mpd)
+
+    // scaled audio <S />
+    expect(scaled.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(origAudioS)
+
+    // scaled video <S />
+    expect(scaled.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(origVideoS)
+  })
+
+  test('Can scale a timeline', async () => {
+    const mpd = getTimeline()
+
+    // confirm input values
+    const oldEpoch = mpd.MPD['@'].availabilityStartTime
+    expect(oldEpoch).toEqual('1970-01-01T00:00:00Z')
+
+    // orig audio <S />
+    const origAudioS = expect.arrayContaining([{ '@': { 'd': 96256, 't': 74065118400512 } }])
+    expect(mpd.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(origAudioS)
+
+    // orig video <S />
+    const origVideoS = { '@': { 'd': 180000, 'r': 150, 't': 138872097000000 } }
+    expect(mpd.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(origVideoS)
+
+    const scaled = scaleInPlace(mpd, 1000, (dict) => {})
+
+    // scaled audio <S />
+    const scaledAudioS = expect.arrayContaining([{ '@': { 'd': 96, 't': 74065118401 } }])
+    expect(scaled.MPD.Period.AdaptationSet[0].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(scaledAudioS)
+
+    // scaled video <S />
+    const scaledVideoS = { '@': { 'd': 180, 'r': 150, 't': 138872097000 } }
+    expect(scaled.MPD.Period.AdaptationSet[1].SegmentTemplate.SegmentTimeline.S)
+      .toMatchObject(scaledVideoS)
+  })
+
+  test('Can summarize a manifest', async () => {
+    expect(summary(getMPD())).toEqual({
+      availabilityStartTime: '1970-01-01T00:00:00Z',
+      AdaptationSet: [ {
+        SegmentTemplateSegmentTimeline: {
+          contentType: 'audio',
+          stamp: '2018-11-24T01:35:00.010Z',
+          t0: 74065118400512,
+          timescale: 48000
+        }
+      }, {
+        SegmentTemplateSegmentTimeline: {
+          contentType: 'video',
+          stamp: '2018-11-24T01:35:00.000Z',
+          t0: 138872097000000,
+          timescale: 90000
+        }
+      } ]
+    })
+  })
+
+  // Cancalculate delta from epochs
+  test.each([
+    ['1970-01-01T00:00:00Z', '1970-01-01T00:00:00Z', 0],
+    ['2018-11-23T00:00:00Z', '2018-11-23T00:00:00Z', 0],
+    ['2018-11-22T00:00:00Z', '2018-11-23T00:00:00Z', 86400],
+    ['1970-01-01T00:00:00Z', '2018-11-23T00:00:00Z', 1542931200],
+    ['2018-11-23T00:00:00Z', '1970-01-01T00:00:00Z', -1542931200]
+  ])('Calculate delta from epochs (%s, %s)',
+    (oldEpoch, newEpoch, expected) => {
+      expect(deltaFromEpochs(oldEpoch, newEpoch)).toBe(expected)
+    }
+  )
+})
 
 // Helpers Below
 
