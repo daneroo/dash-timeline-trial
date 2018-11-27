@@ -3,7 +3,7 @@ const { fetchXml } = require('./io')
 // Gist: https://gist.github.com/daneroo/a76a9e89432bb62da68d386d312c3953
 const gistBase = 'https://gist.githubusercontent.com/daneroo/a76a9e89432bb62da68d386d312c3953/raw/705265126caf704d2b40db061c314df95bc84581'
 
-describe.skip('io', () => {
+describe('io', () => {
   test('Can Fetch a valid xml document', async () => {
     const gist = `${gistBase}/valid.xml`
     // const xml =
