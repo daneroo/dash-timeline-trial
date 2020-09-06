@@ -17,7 +17,7 @@
     "deep-copy": "^1.4.2",
     "express": "^4.16.4",
     "fast-xml-parser": "^3.12.8",
-    "http-proxy": "^1.17.0",
+    "http-proxy": "^1.18.1",
     "morgan": "^1.9.1",
     "morgan-json": "^1.1.0",
     "winston": "^3.1.0"
